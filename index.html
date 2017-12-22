@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>minesweeper</title>			
+	
+    <script src="js/pixi.min.js"></script>    
+    <script src="js/script.js"></script>    	
+    <script src="js/cell.js"></script>
+    <script src="js/board.js"></script>
+    <script src="js/level.js"></script>
+    <script src="js/hash_table.js"></script>
+    <script src="js/button.js"></script>
+    <script src="js/touch_area.js"></script>
+	
+    <style type="text/css">
+	body {
+		margin: 0;
+		padding: 0;
+		background-color: #ffffff;
+	}
+	canvas {        
+		position: absolute;           
+	}
+    #menu {
+        padding: 10px;
+        display: none;
+    }
+    </style>
+  </head>
+  
+  <body>
+      <div id="menu">
+          <div>
+              <span>Field Size:</span>
+              <select id="fieldSizeSelect"></select>
+          </div>
+          <div>
+              <span>Mines:</span>
+              <input id="bombCountInput"/>
+              <input id="bombCountButton" type="button" value="Set"/>
+              </br><span id="bombCountFeedback"></span>
+          </div>
+          <div>
+              <input id="tweakBombsButton" type="button" value="Tweak Mines"/>
+              <input id="exportLevelButton" type="button" value="Export Level"/>
+          </div>
+          <div>
+              <span>Import Level:</span>
+              <input type="file" id="importLevel"/>
+              </br><span id="importLevelFeedback"></span>
+          </div>
+      </div>
+  </body>
+  
+</html>
