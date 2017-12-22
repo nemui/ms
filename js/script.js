@@ -38,6 +38,7 @@ MS.resize = function() {
 };
 
 MS.setup = function() {
+    MS.root.removeChildren();
     MS.board = new MS.Board(MS.CELL_SIZE, PIXI.loader.resources["img/sprites.json"].textures);
     MS.root.addChild(MS.board.container);
     MS.level = new MS.Level(MS.FIELD_SIZE, MS.FIELD_SIZE, MS.BOMB_COUNT);
