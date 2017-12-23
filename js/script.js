@@ -42,6 +42,7 @@ MS.setup = function() {
     MS.board = new MS.Board(MS.CELL_SIZE, PIXI.loader.resources["img/sprites.json"].textures);
     MS.root.addChild(MS.board.container);
     MS.level = new MS.Level(MS.FIELD_SIZE, MS.FIELD_SIZE, MS.BOMB_COUNT);
+    MS.bot = new MS.Bot();
     
     // prevent context menu from showing up
     // toggle flagged status instead    
@@ -130,6 +131,14 @@ MS.setup = function() {
 
             reader.readAsText(f);
         }
+    });
+    
+    // bot
+    document.querySelector("#stepBotButton").addEventListener("click", function(){
+        MS.bot.step(MS.board);
+    });
+    document.querySelector("#solveBotButton").addEventListener("click", function(){
+        MS.bot.solve(MS.board);
     });
     
     // show menu once the game is loaded
