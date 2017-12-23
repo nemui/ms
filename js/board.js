@@ -7,8 +7,7 @@ MS.Board = function(cellSize, textures) {
     this.bombNumbers = ["cell_empty.png"];
     for (var i = 1; i < 9; i++) {
         this.bombNumbers.push("cell_" + i + ".png");
-    }
-    this.cells = new MS.HashTable();        
+    }     
     this.container = new PIXI.Container();
     
     // we need to track user interactions on board to update smiley accordingly
@@ -26,15 +25,21 @@ MS.Board = function(cellSize, textures) {
     };    
     this.buttonSprite = button.sprite;
     this.container.addChild(this.buttonSprite);
-    
-    this.tweakMode = false;
 }
+
+MS.Board.StateEnum = {
+    DEFAULT: 0, // initial
+    FINISHED: 1,// user won/lost
+    TWEAKING: 2 // editing bomb positions
+};
+
 // used for neighbours lookup
 MS.Board.DIFFS = [[-1, 1], [0, 1], [1, 1], [1, 0], [1, -1], [0, -1], [-1, -1], [-1, 0]];
 
 MS.Board.prototype.loadLevel = function(level) {
     this.level = level;
     this.buttonContainer.removeChildren();
+    this.cells = new MS.HashTable();
    
     var rows = level.rows;
     var cols = level.cols;
@@ -50,8 +55,9 @@ MS.Board.prototype.loadLevel = function(level) {
         this.cells.getRaw(key).hasBomb = true;
         this.bombCount++;
     }
-    this.difusedBombCount = 0;
     this.flagCount = 0;
+    this.bombFreeCells = rows * cols - this.bombCount;
+    this.revealedCells = 0;
     
     this.rows = rows;
     this.cols = cols;
@@ -62,7 +68,7 @@ MS.Board.prototype.loadLevel = function(level) {
         , -this.buttonSprite.height);
     this.buttonSprite.texture = this.textures["smiley_default.png"];
     
-    this.tweakMode = false;
+    this.state = MS.Board.StateEnum.DEFAULT;
     this.selectedCell = null;
 };
 
@@ -92,24 +98,9 @@ MS.Board.prototype.getNeighbours = function(cell) {
     return result;
 };
 
-MS.Board.prototype.canFlag = function() {    
-    return this.flagCount < this.bombCount;
-};
-
-MS.Board.prototype.modifyFlags = function(diff, hasBomb) { 
-    this.flagCount += diff;
-    if (hasBomb) {
-        this.difusedBombCount += diff;
-    }
-    // did the user guess all the bombs? it's a win!
-    if (this.difusedBombCount === this.bombCount) {
-        this.finishGame(true);
-    }
-};
-
 MS.Board.prototype.finishGame = function(hasWon) {        
     this.buttonSprite.texture = hasWon ? this.textures["smiley_won.png"] : this.textures["smiley_lost.png"];
-    
+    this.state = MS.Board.StateEnum.FINISHED;
     for (var key in this.cells.getTable()) {        
         this.cells.getRaw(key).reveal(false);            
     }
@@ -126,7 +117,11 @@ MS.Board.prototype.updateCell = function(cell) {
             textureName = "cell_flagged.png"
             break;        
         case MS.Cell.StateEnum.REVEALED:
-            textureName = this.bombNumbers[cell.bombsNearby];            
+            textureName = this.bombNumbers[cell.bombsNearby];
+            // did the user discovered all the bomb-free cells? it's a win!
+            if (this.state === MS.Board.StateEnum.DEFAULT && ++this.revealedCells === this.bombFreeCells) {
+                this.finishGame(true);
+            }
             break;
         case MS.Cell.StateEnum.DEFUSED:
             textureName = "cell_bomb_defused.png"
@@ -178,7 +173,7 @@ MS.Board.prototype.onDown = function(event) {
         return;
     }
     
-    if (this.tweakMode) {
+    if (this.state === MS.Board.StateEnum.TWEAKING) {
         this.handleCellEvent(event.data.originalEvent, function(cell){
             // if cell contains a bomb, select it
             if (cell.hasBomb) {
@@ -192,7 +187,7 @@ MS.Board.prototype.onDown = function(event) {
     }
     else {
         // in case user just won/lost the game, we do not want to change smiley's sprite
-        if (this.buttonSprite.texture === this.textures["smiley_default.png"]) {
+        if (this.state === MS.Board.StateEnum.DEFAULT) {
             this.buttonSprite.texture = this.textures["smiley_almost_there.png"];
         }
     }
@@ -204,11 +199,8 @@ MS.Board.prototype.onUp = function(event) {
         return;
     }
     
-    if (this.tweakMode === false) {
-        // in case user just won/lost the game, we do not want to change smiley's sprite
-        if (this.buttonSprite.texture === this.textures["smiley_almost_there.png"]) {
-            this.buttonSprite.texture = this.textures["smiley_default.png"];
-        }
+    if (this.state === MS.Board.StateEnum.DEFAULT) {
+        this.buttonSprite.texture = this.textures["smiley_default.png"];
     }
 };
 
@@ -216,7 +208,7 @@ MS.Board.prototype.enableTweakMode = function() {
     for (var key in this.cells.getTable()) {        
         this.cells.getRaw(key).reveal(false);            
     }
-    this.tweakMode = true;
+    this.state = MS.Board.StateEnum.TWEAKING;
     this.selectedCell = null;
     this.buttonSprite.texture = this.textures["smiley_default.png"];
 };

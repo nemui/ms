@@ -77,19 +77,17 @@ MS.Cell.prototype.reveal = function(userInitiated) {
 MS.Cell.prototype.toggleFlag = function() {
     if (this.state === MS.Cell.StateEnum.DEFAULT) {  
         // can we put more flags?
-        if (!this.board.canFlag()) {
+        if (this.board.flagCount == this.board.bombCount) {
             return;
         }
         this.state = MS.Cell.StateEnum.FLAGGED;
-        // increase flag count by 1
-        this.board.modifyFlags(1, this.hasBomb);
+        this.board.flagCount++;
         this.board.updateCell(this);        
         this.button.setInteractive(false);
     }
     else if (this.state === MS.Cell.StateEnum.FLAGGED) {
         this.state = MS.Cell.StateEnum.DEFAULT;
-        // decrease flag count by 1
-        this.board.modifyFlags(-1, this.hasBomb);
+        this.board.flagCount--;
         this.board.updateCell(this);        
         this.button.setInteractive(true);
     }
